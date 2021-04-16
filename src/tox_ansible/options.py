@@ -21,6 +21,8 @@ INI_ANSIBLE_LINT_CONFIG = "ansible_lint_config"
 INI_YAMLLINT_CONFIG = "yamllint_config"
 INI_SCENARIO_FORMAT = "scenario_format"
 INI_SCENARIO_FORMAT_DEFAULT = "$path-$parent-$name"
+INI_ENABLED = "enabled"
+INI_ENABLED_DEFAULT = False
 
 
 # pylint: disable=too-many-instance-attributes
@@ -73,8 +75,16 @@ class Options(object):
         paths = self.reader.getlist(INI_IGNORE_PATHS, sep="\n")
         return paths
 
+    @property
+    def enabled(self):
+        return self.reader.getbool(INI_ENABLED, INI_ENABLED_DEFAULT)
+
     def _parse_opt(self, option, opt, env):
-        if isinstance(option, dict) and option[opt] is not None:
+        if (
+            isinstance(option, dict)
+            and opt in option.keys()
+            and option[opt] is not None
+        ):
             values = list(map(lambda a: a.split(","), option[opt]))
             values = list(chain.from_iterable(values))
             return values

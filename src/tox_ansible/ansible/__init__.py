@@ -36,15 +36,6 @@ class Ansible(object):
         self.tox = Tox()
 
     @property
-    def is_ansible(self):
-        """Determine if the specified directory is an Ansible structure or not
-
-        :return: True if this is an Ansible structure. False, otherwise."""
-        return len(self.scenarios) > 0 or path.isfile(
-            path.join(self.directory, "galaxy.yml")
-        )
-
-    @property
     def scenarios(self):
         """Recursively searches the potential Ansible directory and looks for any
         scenario directories found.
