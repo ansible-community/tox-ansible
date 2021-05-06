@@ -13,6 +13,8 @@ from ..tox_lint_case import ToxLintCase
 from ..tox_molecule_case import ToxMoleculeCase
 from .scenario import Scenario
 
+LOCAL_CONFIG_FILE = ".config/molecule/config.yml"
+
 
 class Ansible(object):
     """A generalized class that handles interactions between the plugin and
@@ -45,6 +47,41 @@ class Ansible(object):
         )
 
     @property
+    def is_global_molecule_config(self):
+        """Determine if there is a global molecule configuration file at the
+        project level. If there are molecule base configuration file(s) passed
+        as an options in the tox.ini file, those will take precedence over the
+        global configuration file at the project level.
+
+        :return: A list of absolute path of molecule base configuration file.
+                 None, otherwise."""
+        default_molecule_config = path.join(self.directory, LOCAL_CONFIG_FILE)
+        base_configs = self.options.molecule_base_configs
+
+        if base_configs:
+            return base_configs
+
+        if path.isfile(default_molecule_config):
+            return [default_molecule_config]
+
+        return None
+
+    @property
+    def molecule_global_config(self):
+        """Reads all the molecule base configuration files present and adds them
+        in the self.molecule_global_config field.
+
+        :return: A list of one or multiple dictionaries including the content of
+                 the molecule base configuration file(s)
+        """
+        configs = []
+        if self.is_global_molecule_config:
+            for config_file in self.is_global_molecule_config:
+                configs.append(load_yaml(config_file))
+
+        return configs
+
+    @property
     def scenarios(self):
         """Recursively searches the potential Ansible directory and looks for any
         scenario directories found.
@@ -74,7 +111,12 @@ class Ansible(object):
                 if branch in self.options.ignore_paths:
                     ignored = True
             if not ignored:
-                self._scenarios.append(Scenario(path.relpath(base_dir, self.directory)))
+                self._scenarios.append(
+                    Scenario(
+                        path.relpath(base_dir, self.directory),
+                        self.molecule_global_config,
+                    )
+                )
         return self._scenarios
 
     @property
