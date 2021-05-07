@@ -69,6 +69,24 @@ class Options(object):
         return opts
 
     @property
+    def molecule_base_configs(self):
+        """Get the molecule global options from the tox.ini file
+
+        :return: A list of molecule base configuration file(s)
+                 (absolute path)
+        """
+        base_configs_path = []
+        molecule_opts = self.get_global_opts()
+        res = [x for x, z in enumerate(molecule_opts) if z.startswith("-c")]
+
+        for ind in res:
+            config_path = molecule_opts[ind].split()[-1]
+            if os.path.isabs(config_path):
+                base_configs_path.append(config_path)
+
+        return base_configs_path
+
+    @property
     def ignore_paths(self):
         paths = self.reader.getlist(INI_IGNORE_PATHS, sep="\n")
         return paths
